@@ -1,7 +1,12 @@
 <template>
     <v-app id="inspire">
         <v-card>
-            <v-toolbar flat color="secundary" dark> </v-toolbar>
+            <v-toolbar flat color="secundary" dark>
+                <a id="downloadAnchorElem" style="display:none"></a>
+                <v-btn color="white" outlined @click.prevent="exportJson">Export</v-btn>
+                <v-btn color="yellow" outlined @click.prevent="importJson">Import</v-btn>
+                
+            </v-toolbar>
             <v-tabs>
                 <v-tab> <v-icon left>mdi-resize</v-icon>Shape </v-tab>
                 <v-tab> <v-icon left>mdi-ruler</v-icon> Rules </v-tab>
@@ -28,7 +33,6 @@
                                 </v-col>
                             </v-col>
                             <v-col  cols="5">
-                                <v-card-subtitle>Height (Affects performance)</v-card-subtitle>
                                     <v-checkbox color="green" v-model="checkbox3d">
                                         <template v-slot:label>
                                             <v-card flat>
@@ -123,7 +127,7 @@
                                     ></v-slider>
                                 <v-subheader class="pl-0">Apply garbage rule</v-subheader>
                                 <v-checkbox color="pink" v-model="garbage">
-                                        <template v-slot:label>
+                                        <template >
                                             <v-card flat>
                                                 <p>{{(garbage)? 'Applied': ''}}</p>
                                             </v-card>
@@ -164,9 +168,23 @@
             </v-row>
             </v-tab-item>
             <v-tab-item>
-            <v-row align="center" justify="center">
+            <v-row align="center" >
+                <v-col md=4 sm=12>
                 <v-card flat class="col-6">
+                    <v-card-actions>
+                        <v-btn :color="colorBackground" outlined @click.prevent="setBackground">Background</v-btn>
+                        <v-btn :color="colorCube" outlined @click.prevent="setColorCube">Cube</v-btn>
+                        <v-btn :color="colorVanish" outlined @click.prevent="setVanish">Vanish</v-btn>
+                    </v-card-actions>
+                    <v-color-picker v-model="colorChoosed" class="ma-2" show-swatches swatches-max-height="300px"></v-color-picker>
+
                 </v-card>
+                </v-col>
+                <v-col md=7 sm=12>
+                <v-card flat class="col-6">
+                    <GridCanvas />
+                </v-card>
+                </v-col>
             </v-row>
             </v-tab-item>
         </v-tabs>
@@ -175,44 +193,121 @@
 </template>
 
 <script>
+import GridCanvas from "@/components/GridCanvas"
+import { mapGetters } from "vuex";
+
 export default {
+    components:{GridCanvas},
     data: () => ({
-        size: 10,
+        size: 5,
         checkbox3d: false,
-        height:1,
+        height:0,
         focalLen:"1.5",
         fps:1,
         minNei:2,
         maxNei:3,
         magicNei:3,
-        garbage:true
+        garbage:true,
+        swatches: [
+        ['#FF0000', '#AA0000', '#550000'],
+        ['#FFFF00', '#AAAA00', '#555500'],
+        ['#00FF00', '#00AA00', '#005500'],
+        ['#00FFFF', '#00AAAA', '#005555'],
+        ['#0000FF', '#0000AA', '#000055'],
+      ],
+      colorChoosed: "",
+      colorBackground:"white",
+      colorCube:"white",
+      colorVanish:"white",
+      isColored: false   //or_vanished = 
+
     }),
     computed:{
+        
         combined(){
             return {size: this.size, checkbox3d: this.checkbox3d, height:this.height, focalLen:this.focalLen, fps:this.fps,
-                    minNei: this.minNei, maxNei: this.maxNei, magicNei: this.magicNei, garbage: this.garbage}
-        }
+                    minNei: this.minNei, maxNei: this.maxNei, magicNei: this.magicNei, garbage: this.garbage, colorBackground: this.colorBackground,
+                    colorCube: this.colorCube, isColored: this.isColored}
+        },
+        ...mapGetters({
+            shapeStore: "shape",
+            colorsStore: "colors",
+            rulesStore: "rules"
+        }),
+
     },
     watch: {
         combined: function () {
             //SHAPE
-            localStorage.setItem('SIZE', this.size)
-            if (this.checkbox3d){
-                localStorage.setItem('HEIGHT', this.height);
-            }else{
-                localStorage.setItem('HEIGHT', 1);
+            const shape={
+                size:this.size,
+                height:this.height,
+                focal_length:this.focalLen,
+                fps:this.fps
+            };
+            const rules={
+                minnei:this.minNei,
+                maxnei:this.maxNei,
+                magicnei:this.magicNei,
+                garbage: this.garbage
             }
-            localStorage.setItem('FOCAL_LENGTH', this.focalLen);
-            localStorage.setItem('FPS', this.fps);
-            //RULES
-            localStorage.setItem('MINNEI', this.minNei);
-            localStorage.setItem('MAXNEI', this.maxNei);
-            localStorage.setItem('MAGICNEI', this.magicNei);
-            localStorage.setItem('GARBAGE', this.garbage);
-            //COLORS
-            console.log(this.combined);
+            const color={
+                colorBackground: this.colorBackground,
+                colorCube: this.colorCube,
+                isColored: this.isColored
+            }
             
+           this.$store.dispatch("setShape",shape);
+           this.$store.dispatch("setRules",rules);
+           this.$store.dispatch("setColor",color);
+           console.log("yaay");
+
+
         }
+    },
+    methods: {
+        setBackground(){
+            this.colorBackground = this.colorChoosed;
+        },
+        setColorCube(){
+            this.colorCube = this.colorChoosed;
+            this.isColored = true;
+            this.colorVanish = "white";
+
+        },
+        setVanish(){
+            this.colorCube = "white";
+            this.isColored = false;
+            this.colorVanish = "green";
+        },
+        importJson(){
+
+        },
+        exportJson(){
+            const currentdate = new Date();
+            const myObj = {
+                shape: this.$store.getters["shape"],
+                colors: this.$store.getters["colors"],
+                rules: this.$store.getters["rules"],
+                color: this.$store.getters["color"],
+                about:{
+                    autor:"github.com/addUsername",
+                    demo:"addusername.github.io/GOLife/",
+                    date: + currentdate.getDate() + "/"
+                        + (currentdate.getMonth()+1)  + "/" 
+                        + currentdate.getFullYear() + " @"  
+                        + currentdate.getHours() + ":"  
+                        + currentdate.getMinutes() + ":" 
+                        + currentdate.getSeconds()
+                        } 
+
+            }
+            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(myObj));
+            var dlAnchorElem = document.getElementById('downloadAnchorElem');
+            dlAnchorElem.setAttribute("href",     dataStr     );
+            dlAnchorElem.setAttribute("download", "GOLife.json");
+            dlAnchorElem.click();
+                    }
     }
 }
 </script>

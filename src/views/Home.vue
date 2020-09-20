@@ -63,6 +63,13 @@
                     <dt>Width: {{Math.round(window_width / 1.05)}} | Height: {{Math.round(window_height / 1.3)}}</dt>
                   </dl>
                 </v-col>
+                <v-col lg="2"  class="pa-0 ma-0">
+                  <v-card-subtitle>Colors</v-card-subtitle>
+                  <dl>
+                    <dt>Custom seed: {{CUSTOMINI}} </dt>
+                    <dt>Background: {{FPS}}</dt>
+                  </dl>
+                </v-col>
                 </v-row>
               </v-card-text>
            </v-card>
@@ -85,6 +92,8 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+//Sorry eslint but pre3D is defined as cdn at index.html, idk how to tell you that
 /* eslint-disable */ 
 export default {
   name: 'Home',
@@ -106,35 +115,57 @@ export default {
 
   }),
   computed:{
+     ...mapGetters({
+      shape: "shape",
+      colors: "colors",
+      rules:"rules",
+    }),
     SIZE(){
-      return localStorage.getItem("SIZE");
-    },
-    FPS(){
-      return localStorage.getItem("FPS");
-    },
-    FOCAL_LENGTH(){
-      return localStorage.getItem("FOCAL_LENGTH");
+      return this.$store.getters["shape"].size;
     },
     HEIGHT(){
-      return localStorage.getItem("HEIGHT");
+      return this.$store.getters["shape"].height;
+    },
+    FPS(){
+      return this.$store.getters["shape"].fps;
+    },
+    FOCAL_LENGTH(){
+      return this.$store.getters["shape"].focal_length;
     },
     MINNEI(){
-      return localStorage.getItem("MINNEI");
+      return this.$store.getters["rules"].minnei;
     },
     MAXNEI(){
-      return localStorage.getItem("MAXNEI");
+      return  this.$store.getters["rules"].maxnei;
     },
     MAGICNEI(){
-      return localStorage.getItem("MAGICNEI");
+      return  this.$store.getters["rules"].magicnei;
     },
     GARBAGE(){
-      return localStorage.getItem("GARBAGE");
+      return  this.$store.getters["rules"].garbage;
+    },
+    UPLOADEDGRID(){
+      return  this.$store.getters["colors"].uploadGrid;
+    },
+    CUSTOMINI(){
+      return this.$store.getters["colors"].alternativeIni;
     }
   },
   methods:{
+    rulesIni(i,j,k){
+      console.log(this.CUSTOMINI);
+          if (!this.CUSTOMINI){
+            return (Math.random() < 0.5);
+          }else{
+            console.log("rulesIni");
+            console.log("pos = "+j+" "+i+" "+k)
+              return this.UPLOADEDGRID[j][i][k];
+          } 
+    },
     init(){     
       this.isLoaded=true
       console.log("init()!!");
+      console.log(this.UPLOADEDGRID);
       //apply_rules will affect this array
       this.cubes=[];
       var opacity;  
@@ -142,34 +173,37 @@ export default {
       var cubesAliveK = [];
       var cubesAliveI = [];
       //initialize (first draw)
-      for (var i = 0; i < this.SIZE; ++i) {
-          cubesAliveJ = [];
-        for (var j = 0; j < this.HEIGHT; ++j) {
-          cubesAliveK = [];
-          for (var k = 0; k < this.SIZE; ++k) {
-              if (Math.random() < 0.5){
-                  cubesAliveK.push(1);
-                  opacity = this.OPACITY;
-              }else{
-                  cubesAliveK.push(0);
-                  opacity = 0;
-              }
-              var cube = Pre3d.ShapeUtils.makeCube(0.5);
-              var transform = new Pre3d.Transform();
-              transform.translate(i - 5, j - 5, k - 5);
-              this.cubes.push({
-                shape: cube,
-                color: new Pre3d.RGBA(i / 10, j / 10, k / 10,opacity),
-                trans: transform});
+        for (var i = 0; i < this.SIZE; ++i) {
+            cubesAliveJ = [];
+          for (var j = 0; j < this.HEIGHT; ++j) {
+            cubesAliveK = [];
+            for (var k = 0; k < this.SIZE; ++k) {
+                if (this.rulesIni(i,j,k) ){
+                    cubesAliveK.push(1);
+                    opacity = this.OPACITY;
+                }else{
+                    cubesAliveK.push(0);
+                    opacity = 0;
+                }
+                var cube = Pre3d.ShapeUtils.makeCube(0.5);
+                var transform = new Pre3d.Transform();
+                transform.translate(i - 5, j - 5, k - 5);
+                this.cubes.push({
+                  shape: cube,
+                  color: new Pre3d.RGBA(i / 10, j / 10, k / 10,opacity),
+                  trans: transform});
+            }
+            cubesAliveJ.push(cubesAliveK); 
           }
-          cubesAliveJ.push(cubesAliveK); 
+          cubesAliveI.push(cubesAliveJ);
         }
-        cubesAliveI.push(cubesAliveJ);
-      }
-      this.cubesAlive=cubesAliveI;
-      this.num_cubes =  this.cubes.length;
-      this.draw();
-      this.ticker.start();
+        this.cubesAlive=cubesAliveI;
+        this.num_cubes =  this.cubes.length;
+        this.draw();
+      
+      console.log(this.cubesAlive);
+        this.ticker.start();
+      
     },
     draw(){
       console.log("drrawing!!!");
@@ -229,6 +263,7 @@ export default {
           cubesAliveI.push(cubesAliveJ);
         }
         this.cubesAlive=cubesAliveI;
+        
     },
     applyRules(i,k,j){   
       //j is h 
