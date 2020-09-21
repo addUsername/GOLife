@@ -65,7 +65,8 @@ export default {
     },
     watch: {
         h: function () {
-            this.init();
+            //this.init();
+            console.log("implementar clear")
         }
         },
     methods:{

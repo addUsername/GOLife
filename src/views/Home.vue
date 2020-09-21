@@ -5,8 +5,11 @@
         <v-col lg="3" sm="12">
           <v-card flat class="mx-auto">
               <v-card-title> Conway's Game Of Life!</v-card-title>
-              <v-card-subtitle><v-icon><mdi-arrow-right></mdi-arrow-right></v-icon> Settings</v-card-subtitle>
-              
+              <v-card-subtitle>
+                    <dt>Custom seed: {{CUSTOMINI}} </dt>
+                    <dt>fps: {{FPS}}</dt>
+                    <dt>Colored: {{ISCOLORED}}</dt>
+              </v-card-subtitle>              
                 <v-col>
                   <v-btn color="black"  @click.native="init"><v-icon>mdi-arm-flex</v-icon>Load</v-btn>
                   <v-btn color="grey" outlined @click.native="stop"><v-icon>mdi-pause</v-icon>Pause</v-btn>
@@ -66,8 +69,8 @@
                 <v-col lg="2"  class="pa-0 ma-0">
                   <v-card-subtitle>Colors</v-card-subtitle>
                   <dl>
-                    <dt>Custom seed: {{CUSTOMINI}} </dt>
-                    <dt>Background: {{FPS}}</dt>
+                    <dt>Background: {{ BACKGROUNDCOLOR.red+"-"+BACKGROUNDCOLOR.green+"-"+BACKGROUNDCOLOR.blue+"-"+BACKGROUNDCOLOR.alpha }}</dt>
+                    <dt>Color: {{ COLORCUBE.red+"-"+COLORCUBE.green+"-"+COLORCUBE.blue+"-"+COLORCUBE.alpha }}</dt>
                   </dl>
                 </v-col>
                 </v-row>
@@ -100,7 +103,6 @@ export default {
   components: {
   },
   data: () => ({
-    OPACITY:0.5,
     renderer: "",
     cubes: [],
     cubesAlive:[],
@@ -119,7 +121,20 @@ export default {
       shape: "shape",
       colors: "colors",
       rules:"rules",
+      color: "color"
     }),
+    OPACITY(){
+      return this.$store.getters["color"].colorCube.alpha;
+    },
+    ISCOLORED(){
+      return this.$store.getters["color"].isColored;
+    },
+    BACKGROUNDCOLOR(){
+      return this.$store.getters["color"].colorBackground;
+    },
+    COLORCUBE(){
+      return this.$store.getters["color"].colorCube;
+    },
     SIZE(){
       return this.$store.getters["shape"].size;
     },
@@ -188,9 +203,10 @@ export default {
                 var cube = Pre3d.ShapeUtils.makeCube(0.5);
                 var transform = new Pre3d.Transform();
                 transform.translate(i - 5, j - 5, k - 5);
+                //(new Pre3d.RGBA(i / 10, j / 10, k / 10,opacity)),
                 this.cubes.push({
                   shape: cube,
-                  color: new Pre3d.RGBA(i / 10, j / 10, k / 10,opacity),
+                  color: this.setColorCube(opacity, i ,j ,k),
                   trans: transform});
             }
             cubesAliveJ.push(cubesAliveK); 
@@ -216,9 +232,11 @@ export default {
         this.renderer.bufferShape(cube.shape);        
       }  
       if (this.cur_white) {
+        //Never change white
         this.renderer.ctx.setFillColor(1, 1, 1, 1);
       } else {
-        this.renderer.ctx.setFillColor(0, 0, 0, 1);
+
+        this.renderer.ctx.setFillColor(this.BACKGROUNDCOLOR.red,this.BACKGROUNDCOLOR.green,this.BACKGROUNDCOLOR.blue,this.BACKGROUNDCOLOR.alpha);
       }
       this.renderer.drawBackground();  
       this.renderer.drawBuffer();
@@ -249,12 +267,13 @@ export default {
                     cubesAliveK.push(0);
                     opacity = 0;
                 }
+                //size cube
                 var cube = Pre3d.ShapeUtils.makeCube(0.5);
                 var transform = new Pre3d.Transform();
                 transform.translate(i - 5, j - 5, k - 5);
                 this.cubes.push({
                   shape: cube,
-                  color: new Pre3d.RGBA(i / 10, j / 10, k / 10,opacity),
+                  color: this.setColorCube(opacity, i ,j ,k),
                   trans: transform});
               
             }
@@ -297,6 +316,13 @@ export default {
         sum += this.cubesAlive[i][h][k-1]+this.cubesAlive[i][h][k+1];
         sum += this.cubesAlive[i+1][h][k-1]+this.cubesAlive[i+1][h][k]+this.cubesAlive[i+1][h][k+1];
         return sum;
+    },
+    setColorCube(opacity, i ,j ,k){
+      if(!this.ISCOLORED){
+        return new Pre3d.RGBA(i / 10, j / 10, k / 10,opacity);
+      }else{
+        return new Pre3d.RGBA(this.COLORCUBE.red, this.COLORCUBE.green, this.COLORCUBE.blue, opacity);
+      }
     },
     stop(){
       this.ticker.stop();

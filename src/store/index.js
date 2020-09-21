@@ -1,7 +1,9 @@
 import Vue from "vue";
 import Vuex from "vuex";
+
 Vue.use(Vuex);
 
+const hexRgb = require('hex-rgb');
 export default new Vuex.Store({
       state:{
         shape:{
@@ -21,9 +23,19 @@ export default new Vuex.Store({
             uploadGrid: []
         },
         color:{
-            colorBackground: "",
-            colorCube: "",
-            isColored: false
+          colorBackground: {
+              red: (hexRgb("2f302f").red/255).toFixed(2),
+              green: (hexRgb("2f302f").green/255).toFixed(2),
+              blue: (hexRgb("2f302f").blue/255).toFixed(2),
+              alpha: 1
+          }, 
+          colorCube: {
+              red: (hexRgb("#f2f5f0").red/255).toFixed(2),
+              green: (hexRgb("#f2f5f0").green/255).toFixed(2),
+              blue: (hexRgb("#f2f5f0").blue/255).toFixed(2),
+              alpha: 0.4
+          }, 
+          isColored: false
         }
       },
       mutations:{

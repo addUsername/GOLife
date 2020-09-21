@@ -1,16 +1,17 @@
 <template>
     <v-app id="inspire">
         <v-card>
-            <v-toolbar flat color="secundary" dark>
+            <v-toolbar dense flat color="secundary" dark>
                 <a id="downloadAnchorElem" style="display:none"></a>
-                <v-btn color="white" outlined @click.prevent="exportJson">Export</v-btn>
-                <v-btn color="yellow" outlined @click.prevent="importJson">Import</v-btn>
-                
+                <v-snackbar color="success" v-model="snackBar">
+                    {{ message }}
+                </v-snackbar>
             </v-toolbar>
             <v-tabs>
                 <v-tab> <v-icon left>mdi-resize</v-icon>Shape </v-tab>
                 <v-tab> <v-icon left>mdi-ruler</v-icon> Rules </v-tab>
                 <v-tab> <v-icon left>mdi-format-color-fill</v-icon> Colors </v-tab>
+                <v-tab> <v-icon left>mdi-cloud-download</v-icon>  <v-icon left>mdi-cloud-upload-outline</v-icon></v-tab>
             <v-tab-item>
             <v-row align="center" >
                 <v-card flat class="mx-auto col-10">
@@ -176,16 +177,45 @@
                         <v-btn :color="colorCube" outlined @click.prevent="setColorCube">Cube</v-btn>
                         <v-btn :color="colorVanish" outlined @click.prevent="setVanish">Vanish</v-btn>
                     </v-card-actions>
-                    <v-color-picker v-model="colorChoosed" class="ma-2" show-swatches swatches-max-height="300px"></v-color-picker>
+                    <v-color-picker mode="rgba" v-model="colorChoosed" class="ma-2" show-swatches swatches-max-height="300px"></v-color-picker>
 
                 </v-card>
                 </v-col>
                 <v-col md=7 sm=12>
                 <v-card flat class="col-6">
-                    <GridCanvas />
+                    <GridCanvas /> 
                 </v-card>
                 </v-col>
             </v-row>
+            </v-tab-item>
+            <v-tab-item>
+                <v-row align="center" >
+                    <v-col md=4 sm=12>
+                        <v-card flat class="col-6">
+                            <v-card-subtitle>Manage your custom settings</v-card-subtitle>
+                             <v-btn color="white" big outlined @click.prevent="exportJson"><v-icon left>mdi-cloud-download-outline</v-icon>Download</v-btn>
+                            
+                        </v-card>
+                    </v-col>
+                    <v-col md=7 sm=12>
+                    <v-card flat class="col-6" align="center">
+                        <v-file-input
+                            place-holder="import"
+                            v-model="jsonFile"
+                            acept="application/json"
+                            dense
+                            outlined
+                            />
+                        <v-textarea
+                            readonly
+                            background-color="secundary"
+                            filled
+                            loading
+                            v-model="jsonText"
+                        /> 
+                    </v-card>
+                    </v-col>
+                </v-row>
             </v-tab-item>
         </v-tabs>
         </v-card>
@@ -215,11 +245,15 @@ export default {
         ['#00FFFF', '#00AAAA', '#005555'],
         ['#0000FF', '#0000AA', '#000055'],
       ],
+      snackBar: false,
+      message: "",
       colorChoosed: "",
-      colorBackground:"white",
-      colorCube:"white",
+      colorBackground:"2f302f",
+      colorCube:"#332cb0",
       colorVanish:"white",
-      isColored: false   //or_vanished = 
+      isColored: false,   //or_vanished = 
+      jsonFile: "",
+      jsonText:""
 
     }),
     computed:{
@@ -227,7 +261,7 @@ export default {
         combined(){
             return {size: this.size, checkbox3d: this.checkbox3d, height:this.height, focalLen:this.focalLen, fps:this.fps,
                     minNei: this.minNei, maxNei: this.maxNei, magicNei: this.magicNei, garbage: this.garbage, colorBackground: this.colorBackground,
-                    colorCube: this.colorCube, isColored: this.isColored}
+                    colorCube: this.colorCube, isColored: this.isColored, jsonFile: this.jsonFile}
         },
         ...mapGetters({
             shapeStore: "shape",
@@ -239,6 +273,10 @@ export default {
     watch: {
         combined: function () {
             //SHAPE
+            if(this.jsonFile.size > 1){
+                this.importJson();
+                return
+            }
             const shape={
                 size:this.size,
                 height:this.height,
@@ -251,9 +289,22 @@ export default {
                 magicnei:this.magicNei,
                 garbage: this.garbage
             }
+            const hexRgb = require('hex-rgb');
+            const back = hexRgb(this.colorBackground);
+            const cubecolor = hexRgb(this.colorCube);
             const color={
-                colorBackground: this.colorBackground,
-                colorCube: this.colorCube,
+                colorBackground: {
+                    red: (back.red/255).toFixed(2),
+                    green: (back.green/255).toFixed(2),
+                    blue: (back.blue/255).toFixed(2),
+                    alpha: back.alpha
+                }, 
+                colorCube: {
+                    red: (cubecolor.red/255).toFixed(2),
+                    green:(cubecolor.green/255).toFixed(2),
+                    blue: (cubecolor.blue/255).toFixed(2),
+                    alpha: back.alpha
+                }, 
                 isColored: this.isColored
             }
             
@@ -281,6 +332,25 @@ export default {
             this.colorVanish = "green";
         },
         importJson(){
+            var sanitizeHtml = require('sanitize-html');
+            const blob = new Blob([this.jsonFile], {type:"application/json"});
+            const fr = new FileReader();
+            //xq es async.. .then()?
+            fr.addEventListener("load", e => {
+
+            console.log(e.target.result, JSON.parse(fr.result));            
+            const inputObject = JSON.parse(fr.result);                
+            this.$store.dispatch("setShape",inputObject.shape);
+            this.$store.dispatch("setRules",inputObject.rules);
+            this.$store.dispatch("setColor",inputObject.color);
+            this.$store.dispatch("setColors",inputObject.colors);
+            this.message = ":)";
+            this.snackBar = true;
+            this.jsonText = sanitizeHtml(JSON.stringify(fr.result).string);
+            });
+
+            fr.readAsText(blob);
+            //console.log(fr.result);
 
         },
         exportJson(){
