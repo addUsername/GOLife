@@ -105,9 +105,7 @@ export default {
                     avatar_url: this.GitResponse[i].user.avatar_url,
                     title: this.GitResponse[i].title}
                     
-                    console.log(post);
                     this.comments.push(post);
-                    console.log(this.comments);
                 }
                 
             }

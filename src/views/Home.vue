@@ -11,10 +11,10 @@
                     <dt>Colored: {{ISCOLORED}}</dt>
               </v-card-subtitle>              
                 <v-col>
-                  <v-btn color="black"  @click.native="init"><v-icon>mdi-arm-flex</v-icon>Load</v-btn>
-                  <v-btn color="grey" outlined @click.native="stop"><v-icon>mdi-pause</v-icon>Pause</v-btn>
-                  <v-btn color="green" outlined @click.native="start"><v-icon>mdi-play</v-icon>Start</v-btn>
-                  <v-btn @click.native="background"><v-icon>mdi-theme-light-dark</v-icon></v-btn>
+                  <v-btn small color="black"  @click.native="init"><v-icon>mdi-arm-flex</v-icon>Load</v-btn>
+                  <v-btn small color="grey" outlined @click.native="stop"><v-icon>mdi-pause</v-icon>Pause</v-btn>
+                  <v-btn small color="green" outlined @click.native="start"><v-icon>mdi-play</v-icon>Start</v-btn>               
+                  <v-btn small @click.native="background"><v-icon>mdi-theme-light-dark</v-icon></v-btn>
                 </v-col>
             </v-card>
         </v-col>
@@ -96,7 +96,7 @@
 
 <script>
 import { mapGetters } from "vuex";
-//Sorry eslint but pre3D is defined as cdn at index.html, idk how to tell you that
+//Sorry eslint but pre3D is defined as cdn at index.html, no time to search how to tell you that
 /* eslint-disable */ 
 export default {
   name: 'Home',
@@ -113,8 +113,7 @@ export default {
     //por si quiere cambiar el tamaño¿?
     window_width: window.innerWidth,
     window_height: window.innerHeight,
-    isLoaded: true
-
+    isLoaded: true,
   }),
   computed:{
      ...mapGetters({
@@ -168,19 +167,15 @@ export default {
   },
   methods:{
     rulesIni(i,j,k){
-      console.log(this.CUSTOMINI);
           if (!this.CUSTOMINI){
             return (Math.random() < 0.5);
           }else{
-            console.log("rulesIni");
-            console.log("pos = "+j+" "+i+" "+k)
               return this.UPLOADEDGRID[j][i][k];
           } 
     },
-    init(){     
+    init(){
+        
       this.isLoaded=true
-      console.log("init()!!");
-      console.log(this.UPLOADEDGRID);
       //apply_rules will affect this array
       this.cubes=[];
       var opacity;  
@@ -216,13 +211,10 @@ export default {
         this.cubesAlive=cubesAliveI;
         this.num_cubes =  this.cubes.length;
         this.draw();
-      
-      console.log(this.cubesAlive);
         this.ticker.start();
       
     },
     draw(){
-      console.log("drrawing!!!");
       for (var i = 0; i < this.num_cubes; ++i) {
         //ok es sencillisimo, si hay que dibuar el cubo estas lineas se tienen que ejecutar
         //ojo eh, que esto lee array no una matriz
@@ -336,7 +328,6 @@ export default {
 
   },
   mounted(){
-    console.log("mounted()!!")  
     var screen_canvas = document.getElementById('canvas');
     this.renderer = new Pre3d.Renderer(screen_canvas);
     this.renderer.camera.focal_length = this.FOCAL_LENGTH;

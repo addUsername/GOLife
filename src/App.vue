@@ -41,7 +41,7 @@
         <v-list-item
           color="secondary"
           link
-          to="/"
+          to="/home"
         >
           <v-list-item-icon>
             <v-icon>mdi-home</v-icon>

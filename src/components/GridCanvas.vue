@@ -65,8 +65,6 @@ export default {
     },
     watch: {
         h: function () {
-            //this.init();
-            console.log("implementar clear")
         }
         },
     methods:{
@@ -82,8 +80,6 @@ export default {
                     }
                 }
             }
-            console.log("this.grid 0s")
-            console.log(this.grid);
             
             var canvas = document.getElementById("canvasDraw");
             this.rect = canvas.getBoundingClientRect();
@@ -118,7 +114,6 @@ export default {
             this.ctx.rect((x*this.big), (y*this.big), this.big, this.big);            
             this.ctx.fillStyle = (this.grid[this.h][x][y] == 1)? "white": "black" ;
             this.ctx.fill();
-            console.log(this.grid);
         },
         uploadGrid(){
             

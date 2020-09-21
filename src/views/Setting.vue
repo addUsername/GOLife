@@ -311,7 +311,6 @@ export default {
            this.$store.dispatch("setShape",shape);
            this.$store.dispatch("setRules",rules);
            this.$store.dispatch("setColor",color);
-           console.log("yaay");
 
 
         }
@@ -332,7 +331,6 @@ export default {
             this.colorVanish = "green";
         },
         importJson(){
-            var sanitizeHtml = require('sanitize-html');
             const blob = new Blob([this.jsonFile], {type:"application/json"});
             const fr = new FileReader();
             //xq es async.. .then()?
@@ -346,11 +344,10 @@ export default {
             this.$store.dispatch("setColors",inputObject.colors);
             this.message = ":)";
             this.snackBar = true;
-            this.jsonText = sanitizeHtml(JSON.stringify(fr.result).string);
+            this.jsonText = JSON.stringify(fr.result);
             });
 
             fr.readAsText(blob);
-            //console.log(fr.result);
 
         },
         exportJson(){
