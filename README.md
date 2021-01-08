@@ -6,6 +6,7 @@ Conway's Game Of Life playground, custom colors, rules and initial population.. 
 
 [Play](addusername.github.io/golife/)  :grin:
 
+<img src="screen.jpg" />
 
 
 Thanks to:
